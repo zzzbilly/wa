@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #dadbd3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .chat-container {
+            width: 95%;
+            max-width: 400px;
+            height: 90vh;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .chat-header {
+            background-color: #075e54;
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin-right: 10px;
+        }
+
+        .chat-messages {
+            background-color: #e5ddd5;
+            height: calc(90vh - 120px);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .message {
+            max-width: 65%;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 7.5px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message-sender {
+            font-size: 12px;
+            font-weight: bold;
+            color: #075e54;
+            margin-bottom: 4px;
+        }
+
+        .received {
+            background: white;
+            float: left;
+            border-top-left-radius: 0;
+        }
+
+        .sent {
+            background: #dcf8c6;
+            float: right;
+            border-top-right-radius: 0;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #999;
+            float: right;
+            margin-top: 5px;
+            margin-left: 10px;
+        }
+
+        .chat-input {
+            background-color: #f0f0f0;
+            padding: 10px;
+            position: fixed;
+            bottom: 5vh;
+            width: 95%;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            margin-right: 10px;
+        }
+
+        .chat-input button {
+            background-color: #075e54;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-input-label {
+            background-color: #075e54;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 10px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="profile-image"></div>
+            <div>
+                <h3>WhatsApp Chat</h3>
+                <small>Import your chat</small>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages will be inserted here -->
+        </div>
+        
+        <div class="chat-input">
+            <label for="fileInput" class="file-input-label">Import Chat</label>
+            <input type="file" id="fileInput" accept=".txt">
+        </div>
+    </div>
+
+    <script>
+        function parseWhatsAppMessage(text) {
+            const regex = /(\d{2}\/\d{2}\/\d{2})\s(\d{2}\.\d{2})\s-\s([^:]+):\s(.+)/;
+            const matches = text.match(regex);
+            
+            if (matches) {
+                return {
+                    date: matches[1],
+                    time: matches[2],
+                    sender: matches[3].trim(),
+                    message: matches[4].trim()
+                };
+            }
+            return null;
+        }
+
+        function formatTime(time) {
+            return time.replace('.', ':');
+        }
+
+        function displayMessage(messageData) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message received clearfix';
+            
+            const senderDiv = document.createElement('div');
+            senderDiv.className = 'message-sender';
+            senderDiv.textContent = messageData.sender;
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = messageData.message;
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'message-time';
+            timeSpan.textContent = `${messageData.date} ${formatTime(messageData.time)}`;
+            
+            messageDiv.appendChild(senderDiv);
+            messageDiv.appendChild(messageContent);
+            messageDiv.appendChild(timeSpan);
+            chatMessages.appendChild(messageDiv);
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                
+                document.getElementById('chatMessages').innerHTML = '';
+                
+                lines.forEach(line => {
+                    if (line.trim()) {
+                        const messageData = parseWhatsAppMessage(line);
+                        if (messageData) {
+                            displayMessage(messageData);
+                        }
+                    }
+                });
+            };
+            
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>
